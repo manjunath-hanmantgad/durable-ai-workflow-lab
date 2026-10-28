@@ -1,0 +1,24 @@
+[project]
+name = "durable-ai-workflow-lab"
+version = "0.1.0"
+description = "P01: a bounded, approval-gated AI workflow reliability lab"
+requires-python = ">=3.12,<3.13"
+dependencies = ["pydantic>=2.12,<3"]
+
+[dependency-groups]
+dev = ["pytest>=8,<10"]
+
+[build-system]
+requires = ["hatchling>=1.27,<2"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/p01"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "--strict-markers"
+markers = [
+  "integration: requires the disposable PostgreSQL lab",
+  "e2e: requires lab subprocesses and PostgreSQL",
+]

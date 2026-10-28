@@ -1,0 +1,18 @@
+# Local planning and learning notes
+/docs/
+/LEARNINGS.html
+/LEARNINGS.md
+
+# Local environments, caches, secrets, and agent scratch
+.DS_Store
+.venv/
+__pycache__/
+.pytest_cache/
+*.egg-info/
+dist/
+build/
+.env
+.env.*
+!.env.example
+.superpowers/
+.worktrees/
