@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "cases": [
+    {"id":"C01","scenario":"Valid draft and approval","expected_outcome":"One stored result references one receiver ticket","owning_task":4,"status":"planned"},
+    {"id":"C02","scenario":"Human rejects draft","expected_outcome":"Rejected run issues no external command","owning_task":4,"status":"planned"},
+    {"id":"C03","scenario":"Malformed or invalid model output","expected_outcome":"Typed failure without approval or action","owning_task":4,"status":"planned"},
+    {"id":"C04","scenario":"Model deadline exceeded","expected_outcome":"Persisted bounded attempts and visible terminal outcome","owning_task":4,"status":"planned"},
+    {"id":"C05","scenario":"Sequential repeated request key","expected_outcome":"Existing workflow returned without readmission","owning_task":3,"status":"planned"},
+    {"id":"C06","scenario":"Concurrent repeated request key","expected_outcome":"Exactly one workflow admitted","owning_task":3,"status":"planned"},
+    {"id":"C07","scenario":"Request key reused with changed payload","expected_outcome":"Conflict within the authenticated tenant","owning_task":3,"status":"planned"},
+    {"id":"C08","scenario":"Worker restarts before pickup","expected_outcome":"Persisted request remains discoverable","owning_task":5,"status":"planned"},
+    {"id":"C09","scenario":"Restart while approval is pending","expected_outcome":"Same draft and pending decision survive","owning_task":5,"status":"planned"},
+    {"id":"C10","scenario":"Identical approval repeated","expected_outcome":"Recorded decision returned without another action","owning_task":3,"status":"planned"},
+    {"id":"C11","scenario":"Conflicting or stale draft approval","expected_outcome":"Decision denied without action","owning_task":3,"status":"planned"},
+    {"id":"C12","scenario":"Approval at or after expiry","expected_outcome":"Expired pending approval cannot execute","owning_task":3,"status":"planned"},
+    {"id":"C13","scenario":"Wrong principal or tenant","expected_outcome":"Denial without cross-tenant disclosure","owning_task":3,"status":"planned"},
+    {"id":"C14","scenario":"Permission revoked before execution","expected_outcome":"No external create command issued","owning_task":4,"status":"planned"},
+    {"id":"C15","scenario":"Receiver unavailable before commit","expected_outcome":"Bounded retries and an explicit recovery outcome","owning_task":4,"status":"planned"},
+    {"id":"C16","scenario":"Worker killed after receiver commit","expected_outcome":"Recovery returns original ticket and count remains one","owning_task":5,"status":"planned"},
+    {"id":"C17","scenario":"Concurrent duplicate receiver commands","expected_outcome":"Database uniqueness permits one ticket","owning_task":2,"status":"planned"},
+    {"id":"C18","scenario":"External key reused for changed intent","expected_outcome":"Conflict rather than overwrite","owning_task":2,"status":"planned"},
+    {"id":"C19","scenario":"Backlog full and dependency slow","expected_outcome":"Bounded in-flight work and explicit admission rejection","owning_task":5,"status":"planned"},
+    {"id":"C20","scenario":"Second worker starts","expected_outcome":"Second worker refuses work while leader is active","owning_task":4,"status":"planned"},
+    {"id":"C21","scenario":"Crash after decision commit before resume","expected_outcome":"Recovery consumes the same durable decision","owning_task":5,"status":"planned"},
+    {"id":"C22","scenario":"Crash after final checkpoint before status projection","expected_outcome":"Recovery repairs projection without repeating action","owning_task":5,"status":"planned"},
+    {"id":"C23","scenario":"Receiver commits, response is lost, then permission revoked","expected_outcome":"Needs review without an unauthorized create retry","owning_task":5,"status":"planned"},
+    {"id":"C24","scenario":"Unsupported persisted state version","expected_outcome":"Stop for review instead of unsafe deserialize or resume","owning_task":4,"status":"planned"}
+  ]
+}
