@@ -69,4 +69,4 @@ Explain the write/ack gap, why retries need stable keys, and why changed intent 
 
 ## License
 
-MIT — see `LICENSE` if included, otherwise the playbook repository governs usage.
+MIT — see [`LICENSE`](LICENSE).
