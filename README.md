@@ -9,7 +9,7 @@
 
 When a command crosses a process boundary, the acknowledgement can be lost while the write succeeds. Retries then risk duplicate outcomes. This repository provides a minimal, correct, and tested pattern for closing that gap at the receiver.
 
-![Write/ack gap sequence diagram](architecture/archify-write-ack-gap-sequence.svg)
+![Write/ack gap sequence diagram](architecture/archify-write-ack-gap-sequence.png)
 
 ## Table of contents
 
@@ -93,7 +93,7 @@ The uniqueness of `command_key` is enforced by the database, not by application-
 
 ## Architecture
 
-![Architecture diagram](architecture/archify-runtime-architecture.svg)
+![Architecture diagram](architecture/archify-runtime-architecture.png)
 
 | File | Responsibility |
 | --- | --- |
