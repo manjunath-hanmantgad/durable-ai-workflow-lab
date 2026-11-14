@@ -1,4 +1,4 @@
-<svg viewBox="0 0 560 598" data-sequence-column-fit="spread" data-reader-fit="width-first" role="img" lang="en" aria-labelledby="archify-diagram-title archify-diagram-description" data-animation="trace" data-preset="classic" data-quality-profile="showcase" data-motion-choreography="sequence">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 560 598" data-sequence-column-fit="spread" data-reader-fit="width-first" role="img" lang="en" aria-labelledby="archify-diagram-title archify-diagram-description" data-animation="trace" data-preset="classic" data-quality-profile="showcase" data-motion-choreography="sequence">
         <title id="archify-diagram-title">The Write/Ack Gap</title>
         <desc id="archify-diagram-description">A committed write plus a lost response creates an ambiguous retry</desc>
         <!-- Definitions -->

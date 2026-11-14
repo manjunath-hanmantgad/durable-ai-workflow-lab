@@ -1,4 +1,4 @@
-<svg viewBox="0 0 794 484" role="img" lang="en" aria-labelledby="archify-diagram-title archify-diagram-description" data-animation="trace" data-preset="classic" data-quality-profile="showcase" data-node-ui="" data-reader-fit="intrinsic-height" data-reader-min-text="7.5" data-reader-primary-text="14">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 794 484" role="img" lang="en" aria-labelledby="archify-diagram-title archify-diagram-description" data-animation="trace" data-preset="classic" data-quality-profile="showcase" data-node-ui="" data-reader-fit="intrinsic-height" data-reader-min-text="7.5" data-reader-primary-text="14">
         <title id="archify-diagram-title">Durable Command Receiver — Runtime Architecture</title>
         <desc id="archify-diagram-description">Receiver-side idempotency closes the write/ack gap before retries become duplicates</desc>
         <!-- Definitions -->
