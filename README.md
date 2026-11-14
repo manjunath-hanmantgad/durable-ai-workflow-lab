@@ -9,7 +9,7 @@
 
 When a command crosses a process boundary, the acknowledgement can be lost while the write succeeds. Retries then risk duplicate outcomes. This repository provides a minimal, correct, and tested pattern for closing that gap at the receiver.
 
-![Write/ack gap sequence diagram](architecture/write-ack-gap.svg)
+![Write/ack gap sequence diagram](architecture/archify-write-ack-gap-sequence.svg)
 
 ## Table of contents
 
@@ -76,8 +76,6 @@ No Docker, no external services, no secrets. The full test suite runs in ~0.05 s
 
 ## How it works
 
-![Receiver decision flow](architecture/flow.svg)
-
 The receiver stores three things atomically:
 
 1. the stable `command_key`,
@@ -95,7 +93,7 @@ The uniqueness of `command_key` is enforced by the database, not by application-
 
 ## Architecture
 
-![Architecture diagram](architecture/architecture.svg)
+![Architecture diagram](architecture/archify-runtime-architecture.svg)
 
 | File | Responsibility |
 | --- | --- |
