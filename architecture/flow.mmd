@@ -1,0 +1,7 @@
+flowchart LR
+    A[Command<br/>key + payload] --> B{Key exists?}
+    B -->|No| C[Insert ticket]
+    B -->|Yes + same digest| D[Return stored ticket]
+    B -->|Yes + different digest| E[ConflictError]
+    C --> F[Ticket result]
+    D --> F

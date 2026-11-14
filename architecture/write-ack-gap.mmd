@@ -1,0 +1,14 @@
+sequenceDiagram
+    participant Client
+    participant Receiver
+    participant Database
+
+    Client->>Receiver: create ticket (key = "req-1")
+    Receiver->>Database: INSERT ticket
+    Database-->>Receiver: OK
+    Receiver--xClient: response lost
+    Note over Client: unsure if write happened
+    Client->>Receiver: retry (key = "req-1")
+    Receiver->>Database: SELECT existing ticket
+    Database-->>Receiver: ticket found
+    Receiver-->>Client: original ticket_id

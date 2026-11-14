@@ -1,0 +1,14 @@
+flowchart TB
+    subgraph Client
+        C1[Submit command]
+        C2[Retry on timeout]
+    end
+
+    subgraph Receiver
+        R1[MockReceiver]
+        R2[(SQLite<br/>UNIQUE command_key)]
+    end
+
+    C1 --> R1
+    C2 --> R1
+    R1 --> R2

@@ -8,22 +8,7 @@ When a command crosses a process boundary, the acknowledgement can be lost while
 
 ## The write/ack gap
 
-```mermaid
-sequenceDiagram
-    participant Client
-    participant Receiver
-    participant Database
-
-    Client->>Receiver: create ticket (key = "req-1")
-    Receiver->>Database: INSERT ticket
-    Database-->>Receiver: OK
-    Receiver--xClient: response lost
-    Note over Client: unsure if write happened
-    Client->>Receiver: retry (key = "req-1")
-    Receiver->>Database: SELECT existing ticket
-    Database-->>Receiver: ticket found
-    Receiver-->>Client: original ticket_id
-```
+![Write/ack gap sequence diagram](architecture/write-ack-gap.svg)
 
 Without receiver-side idempotency, the retry creates a second ticket. With it, the retry returns the exact same result.
 
@@ -47,15 +32,7 @@ No Docker, no external services, no secrets. The full test suite runs in ~0.05 s
 
 ## How it works
 
-```mermaid
-flowchart LR
-    A[Command<br/>key + payload] --> B{Key exists?}
-    B -->|No| C[Insert ticket]
-    B -->|Yes + same digest| D[Return stored ticket]
-    B -->|Yes + different digest| E[ConflictError]
-    C --> F[Ticket result]
-    D --> F
-```
+![Receiver decision flow](architecture/flow.svg)
 
 The receiver stores three things atomically:
 
@@ -67,28 +44,15 @@ The uniqueness of `command_key` is enforced by the database, not by application-
 
 ## Architecture
 
-```mermaid
-flowchart TB
-    subgraph Client
-        C1[Submit command]
-        C2[Retry on timeout]
-    end
-
-    subgraph Receiver
-        R1[MockReceiver]
-        R2[(SQLite<br/>UNIQUE command_key)]
-    end
-
-    C1 --> R1
-    C2 --> R1
-    R1 --> R2
-```
+![Architecture diagram](architecture/architecture.svg)
 
 | File | Responsibility |
 | --- | --- |
 | `src/p01/contracts.py` | `Command`, `Ticket`, and canonical SHA-256 digest. |
 | `src/p01/receiver.py` | SQLite-backed receiver with atomic insert-or-return logic. |
 | `tests/test_gap.py` | Proofs for retry, concurrency, conflict, restart, and digest stability. |
+
+Diagram sources live in [`architecture/`](architecture/).
 
 ## Usage example
 
