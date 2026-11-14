@@ -1,7 +1,7 @@
 [project]
 name = "durable-ai-workflow-lab"
 version = "0.1.0"
-description = "P01: minimal proof of the write/ack gap and receiver idempotency"
+description = "P01: receiver-side idempotency reference implementation for durable command execution"
 requires-python = ">=3.12,<3.13"
 dependencies = []
 

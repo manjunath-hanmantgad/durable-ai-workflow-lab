@@ -1,71 +1,138 @@
-# Durable AI Workflow Lab — P01
+# Durable Command Receiver — P01
 
-> **The write/ack gap:** why retries need an idempotent receiver, not just a brave client.
+> **A reference implementation of receiver-side idempotency for durable command execution.**
 
 Part of the [Open Source AI Engineering Playbook](https://github.com/manjunath-hanmantgad/opensource-playbook).
 
-## The problem in one scenario
+When a command crosses a process boundary, the acknowledgement can be lost while the write succeeds. Retries then risk duplicate outcomes. This repository provides a minimal, correct, and tested pattern for closing that gap at the receiver.
 
-```text
-client -> receiver: create ticket (key = "req-1")
-receiver -> database: INSERT ticket
-receiver -> client: [response lost]
-client -> receiver: create ticket (key = "req-1")  -- retry
+## The write/ack gap
+
+```mermaid
+sequenceDiagram
+    participant Client
+    participant Receiver
+    participant Database
+
+    Client->>Receiver: create ticket (key = "req-1")
+    Receiver->>Database: INSERT ticket
+    Database-->>Receiver: OK
+    Receiver--xClient: response lost
+    Note over Client: unsure if write happened
+    Client->>Receiver: retry (key = "req-1")
+    Receiver->>Database: SELECT existing ticket
+    Database-->>Receiver: ticket found
+    Receiver-->>Client: original ticket_id
 ```
 
-Without receiver-side idempotency, the retry creates a second ticket. With it, the receiver returns the **same ticket** it already committed.
+Without receiver-side idempotency, the retry creates a second ticket. With it, the retry returns the exact same result.
 
-This repository is a minimal, runnable proof of that idea.
+## What this implementation proves
 
-## What is proved here
+- **Same key, same payload** → returns the original ticket.
+- **Concurrent retries** → only one ticket is created (database-enforced).
+- **Same key, different payload** → rejected as a conflict.
+- **Receiver restart** → stored results survive because persistence lives in SQLite.
 
-- A retry with the same `command_key` returns the original `ticket_id`.
-- Ten concurrent retries still create exactly one ticket.
-- Reusing a key with a changed payload is rejected as a conflict.
-- The stored result survives a receiver restart.
+## Quick start
 
-```text
+Requires Python 3.12 and [uv](https://docs.astral.sh/uv/).
+
+```sh
 uv sync --frozen
 uv run --frozen pytest -q
 ```
 
-No Docker, no database setup, no model calls, no secrets. Runs in ~0.05 s.
+No Docker, no external services, no secrets. The full test suite runs in ~0.05 s.
 
-## The core idea
+## How it works
 
-A local ledger or workflow checkpoint cannot prevent duplicate external writes. Only the external receiver can, by atomically storing:
+```mermaid
+flowchart LR
+    A[Command<br/>key + payload] --> B{Key exists?}
+    B -->|No| C[Insert ticket]
+    B -->|Yes + same digest| D[Return stored ticket]
+    B -->|Yes + different digest| E[ConflictError]
+    C --> F[Ticket result]
+    D --> F
+```
 
-1. the stable command key, and
-2. the business result it produced.
+The receiver stores three things atomically:
 
-If the key already exists with the same payload, return the stored result. If the key exists with a different payload, conflict. That is the smallest durable-systems guarantee.
+1. the stable `command_key`,
+2. a digest of the payload,
+3. the business result (`ticket_id`).
 
-## File map
+The uniqueness of `command_key` is enforced by the database, not by application-level locking, so concurrent retries race safely.
+
+## Architecture
+
+```mermaid
+flowchart TB
+    subgraph Client
+        C1[Submit command]
+        C2[Retry on timeout]
+    end
+
+    subgraph Receiver
+        R1[MockReceiver]
+        R2[(SQLite<br/>UNIQUE command_key)]
+    end
+
+    C1 --> R1
+    C2 --> R1
+    R1 --> R2
+```
 
 | File | Responsibility |
 | --- | --- |
-| `src/p01/contracts.py` | `Command`, `Ticket`, and a canonical SHA-256 digest. |
-| `src/p01/receiver.py` | SQLite-backed mock receiver with `UNIQUE(command_key)`. |
-| `tests/test_gap.py` | Five pytest proofs of retry, concurrency, conflict, and restart survival. |
+| `src/p01/contracts.py` | `Command`, `Ticket`, and canonical SHA-256 digest. |
+| `src/p01/receiver.py` | SQLite-backed receiver with atomic insert-or-return logic. |
+| `tests/test_gap.py` | Proofs for retry, concurrency, conflict, restart, and digest stability. |
 
-## What this is *not*
+## Usage example
 
-- Not a production workflow engine.
-- No HTTP API, auth, multi-tenancy, LangGraph, PostgreSQL, checkpoints, or distributed workers.
-- No real network, model, or ticket vendor.
-- No performance or scale claims.
+```python
+from p01.contracts import Command
+from p01.receiver import MockReceiver
 
-It is one interview-ready concept made concrete.
+receiver = MockReceiver("/tmp/tickets.db")
+cmd = Command(key="req-1", payload={"title": "Fix login", "priority": "high"})
 
-## Interview takeaway
+first = receiver.create_ticket(cmd)
+second = receiver.create_ticket(cmd)
 
-> **Why can't a client just check its own log before retrying?**
->
-> The write and the acknowledgement are separate events. The receiver may commit a ticket and then crash, drop the response, or lose the network before the client learns the outcome. The client's log can never know for sure whether the write happened. Only the receiver's atomic store of `(command_key, result)` can answer that question on retry.
+assert first.ticket_id == second.ticket_id
+```
 
-## Learning goal
+## Guarantees and scope
 
-Explain the write/ack gap, why retries need stable keys, and why changed intent must conflict — in your own words, without the code in front of you.
+This is a **bounded, correct primitive**, not a full workflow engine.
+
+| In scope | Out of scope (intentionally) |
+| --- | --- |
+| Receiver-side idempotency | HTTP API, auth, multi-tenancy |
+| Atomic key-result storage | LangGraph, checkpoints, distributed workers |
+| SQLite persistence | Real ticket vendors or external APIs |
+| Deterministic canonical digests | Performance or scale benchmarks |
+
+Use it as a starting point for durable command patterns. Add HTTP, auth, and orchestration only when your workload needs them.
+
+## Test coverage
+
+```text
+uv run --frozen pytest -q
+```
+
+- `test_lost_ack_retry_returns_same_ticket`
+- `test_concurrent_duplicates_create_one_ticket`
+- `test_changed_payload_conflicts`
+- `test_survives_receiver_restart`
+- `test_command_digest_is_stable_and_payload_sensitive`
+
+## Roadmap
+
+P01 establishes the core receiver contract. Later work may extend this into a full approval-gated workflow with HTTP boundaries, durable checkpoints, and crash-recovery proofs — each layer tested independently before it is added.
 
 ## License
 
