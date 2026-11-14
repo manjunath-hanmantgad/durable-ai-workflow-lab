@@ -1,35 +1,72 @@
-# Durable AI Workflow Lab
+# Durable AI Workflow Lab — P01
 
-**P01 — the write/ack gap and receiver idempotency.** Part of the [Open Source AI Engineering Playbook](https://github.com/manjunath-hanmantgad/opensource-playbook).
+> **The write/ack gap:** why retries need an idempotent receiver, not just a brave client.
 
-A client sends a command to a mock ticket vendor. The vendor may commit the ticket but fail to acknowledge the response. Retries must not create duplicates. This is the smallest durable-systems proof: only the receiver's atomic unique constraint can close the gap.
+Part of the [Open Source AI Engineering Playbook](https://github.com/manjunath-hanmantgad/opensource-playbook).
 
-## Current proof boundary
+## The problem in one scenario
 
-- **Proved:** same command key returns the same ticket; concurrent retries create one ticket; changed payload under the same key conflicts; the result survives receiver restart.
-- **Not claimed:** real network, distributed workers, checkpoints, human approval, auth, multi-tenancy, performance, or production readiness.
+```text
+client -> receiver: create ticket (key = "req-1")
+receiver -> database: INSERT ticket
+receiver -> client: [response lost]
+client -> receiver: create ticket (key = "req-1")  -- retry
+```
 
-## Run it
+Without receiver-side idempotency, the retry creates a second ticket. With it, the receiver returns the **same ticket** it already committed.
 
-Requires Python 3.12 and [uv](https://docs.astral.sh/uv/).
+This repository is a minimal, runnable proof of that idea.
 
-```sh
+## What is proved here
+
+- A retry with the same `command_key` returns the original `ticket_id`.
+- Ten concurrent retries still create exactly one ticket.
+- Reusing a key with a changed payload is rejected as a conflict.
+- The stored result survives a receiver restart.
+
+```text
 uv sync --frozen
 uv run --frozen pytest -q
 ```
 
-No Docker, no database setup, no model calls, no secrets.
+No Docker, no database setup, no model calls, no secrets. Runs in ~0.05 s.
 
-## Core files
+## The core idea
 
-- `src/p01/contracts.py` — `Command`, `Ticket`, and canonical digest.
-- `src/p01/receiver.py` — SQLite mock receiver with `command_key` uniqueness.
-- `tests/test_gap.py` — four pytest proofs of the gap.
+A local ledger or workflow checkpoint cannot prevent duplicate external writes. Only the external receiver can, by atomically storing:
 
-## The one-sentence takeaway
+1. the stable command key, and
+2. the business result it produced.
 
-A local ledger cannot prevent duplicate external writes; the external receiver must store the command key and result atomically.
+If the key already exists with the same payload, return the stored result. If the key exists with a different payload, conflict. That is the smallest durable-systems guarantee.
 
-## Learning focus
+## File map
 
-Explain the write/ack gap, why retries need stable keys, and why changed intent must conflict. This is interview material for FDE and AI Engineer roles, not a product demo.
+| File | Responsibility |
+| --- | --- |
+| `src/p01/contracts.py` | `Command`, `Ticket`, and a canonical SHA-256 digest. |
+| `src/p01/receiver.py` | SQLite-backed mock receiver with `UNIQUE(command_key)`. |
+| `tests/test_gap.py` | Five pytest proofs of retry, concurrency, conflict, and restart survival. |
+
+## What this is *not*
+
+- Not a production workflow engine.
+- No HTTP API, auth, multi-tenancy, LangGraph, PostgreSQL, checkpoints, or distributed workers.
+- No real network, model, or ticket vendor.
+- No performance or scale claims.
+
+It is one interview-ready concept made concrete.
+
+## Interview takeaway
+
+> **Why can't a client just check its own log before retrying?**
+>
+> The write and the acknowledgement are separate events. The receiver may commit a ticket and then crash, drop the response, or lose the network before the client learns the outcome. The client's log can never know for sure whether the write happened. Only the receiver's atomic store of `(command_key, result)` can answer that question on retry.
+
+## Learning goal
+
+Explain the write/ack gap, why retries need stable keys, and why changed intent must conflict — in your own words, without the code in front of you.
+
+## License
+
+MIT — see `LICENSE` if included, otherwise the playbook repository governs usage.
