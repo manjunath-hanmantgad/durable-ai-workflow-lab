@@ -8,4 +8,5 @@
 - Commit and push coherent feature-branch changes; never force-push or infer approval.
 - Never add or force-add `docs/`, `LEARNINGS.html`, `LEARNINGS.md`, `.superpowers/`, environments, secrets, or local scratch.
 - Update `LEARNINGS.html` and the parent workspace `LAB-WORKFLOW.md` at meaningful steps.
+- For Archify diagrams, export the generated HTML to PNG (e.g., via Playwright) and verify images render on the public GitHub README. Do not reference the raw extracted SVG in public docs.
 - Separate proved, simulated, and unproved claims.
